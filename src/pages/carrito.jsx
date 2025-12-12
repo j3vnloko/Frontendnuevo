@@ -80,19 +80,39 @@ export default function Carrito() {
   };
 
   const procesarCompra = async () => {
-    if (!carrito || !carrito.items || carrito.items.length === 0) {
-      alert('El carrito está vacío');
-      return;
-    }
+  if (!carrito || !carrito.items || carrito.items.length === 0) {
+    alert('El carrito está vacío');
+    return;
+  }
 
-    try {
-      await apiService.crearOrden(usuario.id);
-      alert('¡Compra procesada exitosamente! Revisa tu historial.');
-      navigate('/historial');
-    } catch (error) {
-      alert('Error al procesar la compra: ' + error.message);
-    }
-  };
+  // Confirmar compra
+  if (!window.confirm(`¿Confirmar compra por $${total.toLocaleString()}?`)) {
+    return;
+  }
+
+  try {
+    setLoading(true);
+    console.log('Procesando compra para usuario:', usuario.id); // Debug
+
+    const orden = await apiService.crearOrden(usuario.id);
+    
+    console.log('Orden creada:', orden); // Debug
+    
+    alert(`¡Compra procesada exitosamente!\nBoleta: ${orden.numeroBoleta}`);
+    
+    // Actualizar contador del carrito
+    window.dispatchEvent(new Event('carritoActualizado'));
+    
+    // Redirigir al historial
+    navigate('/historial');
+    
+  } catch (error) {
+    console.error('Error completo:', error); // Debug
+    alert(`Error al procesar la compra:\n${error.message}`);
+  } finally {
+    setLoading(false);
+  }
+};
 
   if (loading) {
     return (

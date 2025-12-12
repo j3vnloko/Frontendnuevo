@@ -241,17 +241,27 @@ export const apiService = {
   // ---------------------------------------------------
 
   async crearOrden(usuarioId) {
-    const token = localStorage.getItem("token");
+  const token = localStorage.getItem("token");
 
-    const resp = await fetch(`${API_BASE_URL}/ordenes/${usuarioId}/crear`, {
-      method: "POST",
-      headers: {
-        "Accept": "application/json",
-        "Authorization": `Bearer ${token}`
-      }
-    });
-    return handleResponse(resp);
-  },
+  if (!token) {
+    throw new Error('No hay token de autenticación');
+  }
+
+  const resp = await fetch(`${API_BASE_URL}/ordenes/${usuarioId}/crear`, {
+    method: "POST",
+    headers: {
+      "Accept": "application/json",
+      "Authorization": `Bearer ${token}`
+    }
+  });
+
+  if (!resp.ok) {
+    const errorData = await resp.json().catch(() => ({ error: "Error desconocido" }));
+    throw new Error(errorData.error || errorData.message || "Error al crear la orden");
+  }
+
+  return resp.json();
+},
 
   async obtenerHistorialUsuario(usuarioId) {
     const token = localStorage.getItem("token");
