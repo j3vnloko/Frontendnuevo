@@ -154,129 +154,88 @@ export const apiService = {
   },
 
   // ---------------------------------------------------
-  // 🛒 CARRITO (CORREGIDO CON TOKEN)
+  // 🛒 CARRITO (COMPLETO Y CORREGIDO)
   // ---------------------------------------------------
 
-  async agregarAlCarrito(usuarioId, productoId, cantidad) {
-    const token = localStorage.getItem("token");
-
-    const resp = await fetch(`${API_BASE_URL}/carrito/${usuarioId}/agregar`, {
-      method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      },
-      body: JSON.stringify({ productoId, cantidad })
-    });
-    return handleResponse(resp);
+  async obtenerCarrito(usuarioId) {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${API_BASE_URL}/carrito/${usuarioId}`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      return await handleResponse(response);
+    } catch (error) {
+      console.error("Error al obtener carrito:", error);
+      throw error;
+    }
   },
 
-  async obtenerCarrito(usuarioId) {
-    const token = localStorage.getItem("token");
+  async agregarAlCarrito(usuarioId, productoId, cantidad) {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${API_BASE_URL}/carrito/${usuarioId}/agregar`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ productoId, cantidad })
+      });
+      return await handleResponse(response);
+    } catch (error) {
+      console.error("Error al agregar al carrito:", error);
+      throw error;
+    }
+  },
 
-    const resp = await fetch(`${API_BASE_URL}/carrito/${usuarioId}`, {
-      headers: { 
-        "Authorization": `Bearer ${token}`
-      }
-    });
-    return handleResponse(resp);
+  async actualizarCantidadCarrito(usuarioId, itemId, cantidad) {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${API_BASE_URL}/carrito/${usuarioId}/item/${itemId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ cantidad })
+      });
+      return await handleResponse(response);
+    } catch (error) {
+      console.error("Error al actualizar cantidad:", error);
+      throw error;
+    }
+  },
+
+  async eliminarItemCarrito(usuarioId, itemId) {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${API_BASE_URL}/carrito/${usuarioId}/item/${itemId}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+      return await handleResponse(response);
+    } catch (error) {
+      console.error("Error al eliminar item:", error);
+      throw error;
+    }
   },
 
   async vaciarCarrito(usuarioId) {
-    const token = localStorage.getItem("token");
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${API_BASE_URL}/carrito/${usuarioId}/vaciar`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` }
+      });
 
-    const resp = await fetch(`${API_BASE_URL}/carrito/${usuarioId}/vaciar`, {
-      method: "DELETE",
-      headers: { "Authorization": `Bearer ${token}` }
-    });
-    return handleResponse(resp);
+      if (response.status === 204) return null;
+      return await handleResponse(response);
+    } catch (error) {
+      console.error("Error al vaciar carrito:", error);
+      throw error;
+    }
   },
-// ==================== CARRITO ====================
 
-async obtenerCarrito(usuarioId) {
-  try {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`${API_BASE_URL}/carrito/${usuarioId}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    return await handleResponse(response);
-  } catch (error) {
-    console.error('Error al obtener carrito:', error);
-    throw error;
-  }
-},
-
-async agregarAlCarrito(usuarioId, productoId, cantidad) {
-  try {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`${API_BASE_URL}/carrito/${usuarioId}/agregar`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({ productoId, cantidad })
-    });
-    return await handleResponse(response);
-  } catch (error) {
-    console.error('Error al agregar al carrito:', error);
-    throw error;
-  }
-},
-
-async actualizarCantidadCarrito(usuarioId, itemId, cantidad) {
-  try {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`${API_BASE_URL}/carrito/${usuarioId}/item/${itemId}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({ cantidad })
-    });
-    return await handleResponse(response);
-  } catch (error) {
-    console.error('Error al actualizar cantidad:', error);
-    throw error;
-  }
-},
-
-async eliminarItemCarrito(usuarioId, itemId) {
-  try {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`${API_BASE_URL}/carrito/${usuarioId}/item/${itemId}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    return await handleResponse(response);
-  } catch (error) {
-    console.error('Error al eliminar item:', error);
-    throw error;
-  }
-},
-
-async vaciarCarrito(usuarioId) {
-  try {
-    const token = localStorage.getItem('token');
-    const response = await fetch(`${API_BASE_URL}/carrito/${usuarioId}/vaciar`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-    
-    if (response.status === 204) return null;
-    return await handleResponse(response);
-  } catch (error) {
-    console.error('Error al vaciar carrito:', error);
-    throw error;
-  }
-},
   // ---------------------------------------------------
   // 📦 ÓRDENES / HISTORIAL / BOLETA
   // ---------------------------------------------------
