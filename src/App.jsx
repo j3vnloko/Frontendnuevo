@@ -18,9 +18,11 @@ import Login from './pages/Login';
 import Registro from './pages/Registro';
 import Admin from './pages/Admin';
 
-// ⭐ Nuevas páginas protegidas
 import Perfil from './pages/Perfil';
 import Historial from './pages/Historial';
+
+// ⭐ NUEVA IMPORTACIÓN — DASHBOARD ADMIN
+import AdminDashboard from './pages/AdminDashboard';
 
 function App() {
   return (
@@ -29,7 +31,8 @@ function App() {
 
       <main className="flex-grow-1">
         <Routes>
-          {/* PÚBLICAS */}
+
+          {/* 🌿 PÚBLICAS */}
           <Route path="/" element={<Home />} />
           <Route path="/productos" element={<Productos />} />
           <Route path="/productos/:id" element={<DetalleProducto />} />
@@ -40,8 +43,8 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/registro" element={<Registro />} />
 
-          {/* ADMIN */}
-          <Route 
+          {/* 🛡️ ADMIN (Página antigua de Admin si aún la usas) */}
+          <Route
             path="/admin"
             element={
               <ProtectedAdminRoute>
@@ -50,24 +53,35 @@ function App() {
             }
           />
 
+          {/* 🛡️ NUEVO PANEL ADMIN */}
+          <Route
+            path="/admin-dashboard"
+            element={
+              <ProtectedAdminRoute>
+                <AdminDashboard />
+              </ProtectedAdminRoute>
+            }
+          />
+
           {/* ⭐ RUTAS PROTEGIDAS (CLIENTE AUTENTICADO) */}
-          <Route 
-            path="/perfil" 
+          <Route
+            path="/perfil"
             element={
               <ProtectedRoute>
                 <Perfil />
               </ProtectedRoute>
-            } 
+            }
           />
 
-          <Route 
-            path="/historial" 
+          <Route
+            path="/historial"
             element={
               <ProtectedRoute>
                 <Historial />
               </ProtectedRoute>
-            } 
+            }
           />
+
         </Routes>
       </main>
 

@@ -1,6 +1,7 @@
+// src/pages/Registro.jsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { authService } from '../services/authService'; // ⭐ IMPORTANTE: agregado
+import { authService } from '../services/authService';
 
 export default function Registro() {
   const navigate = useNavigate();
@@ -15,7 +16,8 @@ export default function Registro() {
     region: '',
     comuna: '',
     direccion: '',
-    fechaNacimiento: ''
+    fechaNacimiento: '',
+    rol: 'CLIENTE' // ✅ Nuevo campo
   });
 
   const [mensaje, setMensaje] = useState('');
@@ -23,14 +25,11 @@ export default function Registro() {
   const regiones = ['Metropolitana', 'Valparaíso', 'Biobío', 'Araucanía'];
   const comunas = ['Santiago', 'Maipú', 'Providencia', 'Las Condes', 'Puente Alto'];
 
-  // Validación simple de RUN sin puntos ni guion
   const validarRun = (run) => /^\d{7,8}[0-9kK]$/.test(run);
 
-  // ⭐ NUEVA FUNCIÓN HANDLE SUBMIT (REEMPLAZA LA ANTERIOR)
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validaciones
     if (!validarRun(formData.run)) {
       setMensaje('RUN inválido. Formato: 12345678K (sin puntos ni guion)');
       return;
@@ -64,13 +63,12 @@ export default function Registro() {
       return;
     }
 
-    // ⭐ ENVÍO REAL AL BACKEND
     try {
       await authService.registro({
         nombre: formData.nombre,
         email: formData.email,
         password: formData.password,
-        rol: 'CLIENTE'
+        rol: formData.rol // ✅ Enviar el rol seleccionado
       });
 
       alert('¡Registro exitoso! Ya puedes iniciar sesión');
@@ -153,6 +151,23 @@ export default function Registro() {
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   required
                 />
+              </div>
+
+              {/* ✅ NUEVO: Selector de rol */}
+              <div className="col-12 mb-3">
+                <label className="form-label">Tipo de cuenta *</label>
+                <select
+                  className="form-select"
+                  value={formData.rol}
+                  onChange={(e) => setFormData({ ...formData, rol: e.target.value })}
+                  required
+                >
+                  <option value="CLIENTE">Cliente</option>
+                  <option value="ADMIN">Administrador</option>
+                </select>
+                <small className="text-muted">
+                  Selecciona "Administrador" para acceder al panel de administración
+                </small>
               </div>
 
               <div className="col-md-6 mb-3">

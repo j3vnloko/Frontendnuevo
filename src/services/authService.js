@@ -16,13 +16,14 @@ export const authService = {
     }
 
     const data = await response.json();
-    
-    // Guardar token y datos del usuario
+
+    // ✅ Guardar token y datos DEL USUARIO con ROL
     localStorage.setItem('token', data.token);
     localStorage.setItem('usuario', JSON.stringify({
       id: data.id,
       nombre: data.nombre,
-      email: data.email
+      email: data.email,
+      rol: data.rol  // ← AGREGADO
     }));
 
     return data;
@@ -42,13 +43,14 @@ export const authService = {
     }
 
     const data = await response.json();
-    
-    // Guardar token y datos del usuario
+
+    // ✅ Guardar token y usuario con ROL después del registro
     localStorage.setItem('token', data.token);
     localStorage.setItem('usuario', JSON.stringify({
       id: data.id,
       nombre: data.nombre,
-      email: data.email
+      email: data.email,
+      rol: data.rol  // ← AGREGADO
     }));
 
     return data;

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { authService } from '../services/authService'; 
-import { apiService } from '../api/apiService'; // ✅ IMPORTANTE
+import { authService } from '../services/authService';
+import { apiService } from '../api/apiService';
 
 export default function Navbar() {
   const [cartCount, setCartCount] = useState(0);
@@ -10,7 +10,7 @@ export default function Navbar() {
   const isAuthenticated = authService.isAuthenticated();
 
   // ============================
-  // ✅ Cerrar sesión
+  // 🔐 Cerrar sesión
   // ============================
   const handleLogout = () => {
     if (window.confirm('¿Cerrar sesión?')) {
@@ -20,7 +20,7 @@ export default function Navbar() {
   };
 
   // ============================
-  // ✅ Contador REAL desde backend
+  // 🛒 Contador REAL desde backend
   // ============================
   const actualizarContador = async () => {
     const usuario = authService.getUsuario();
@@ -40,9 +40,7 @@ export default function Navbar() {
     }
   };
 
-  // ============================
-  // 🔄 Escuchar cambios
-  // ============================
+  // Escuchar cambios
   useEffect(() => {
     actualizarContador();
 
@@ -60,7 +58,7 @@ export default function Navbar() {
   return (
     <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm fixed-top">
       <div className="container-fluid px-4">
-        
+
         <Link className="navbar-brand fw-bold" to="/">🍃 Sativamente</Link>
 
         <button
@@ -73,7 +71,8 @@ export default function Navbar() {
         </button>
 
         <div className="collapse navbar-collapse" id="navbarNav">
-          
+
+          {/* MENÚ IZQUIERDO */}
           <ul className="navbar-nav me-auto">
             <li className="nav-item"><Link className="nav-link" to="/">Home</Link></li>
             <li className="nav-item"><Link className="nav-link" to="/productos">Productos</Link></li>
@@ -82,15 +81,18 @@ export default function Navbar() {
             <li className="nav-item"><Link className="nav-link" to="/contacto">Contacto</Link></li>
           </ul>
 
-          {/* ⭐ MENÚ DE USUARIO */}
+          {/* MENÚ DERECHA */}
           <div className="d-flex align-items-center">
 
+            {/* CARRITO */}
             <Link to="/carrito" className="nav-link me-3">
               Carrito ({cartCount})
             </Link>
 
+            {/* =============================
+               👤 MENÚ DE USUARIO
+               ============================= */}
             {isAuthenticated ? (
-              // ⭐ USER LOGEADO
               <div className="dropdown">
                 <a
                   className="nav-link dropdown-toggle"
@@ -104,7 +106,21 @@ export default function Navbar() {
                 <ul className="dropdown-menu dropdown-menu-end">
                   <li><Link className="dropdown-item" to="/perfil">Mi Perfil</Link></li>
                   <li><Link className="dropdown-item" to="/historial">Mis Compras</Link></li>
+
+                  {/* ⭐ SOLO ADMIN VE ESTO */}
+                  {usuario?.rol === "ADMIN" && (
+                    <>
+                      <li><hr className="dropdown-divider" /></li>
+                      <li>
+                        <Link className="dropdown-item text-danger" to="/admin-dashboard">
+                          🛡️ Panel Admin
+                        </Link>
+                      </li>
+                    </>
+                  )}
+
                   <li><hr className="dropdown-divider" /></li>
+
                   <li>
                     <button className="dropdown-item" onClick={handleLogout}>
                       Cerrar Sesión
@@ -112,8 +128,9 @@ export default function Navbar() {
                   </li>
                 </ul>
               </div>
+
             ) : (
-              // ⭐ USER NO LOGEADO
+              /* Usuario NO autenticado */
               <div className="dropdown">
                 <a
                   className="nav-link dropdown-toggle"
@@ -135,6 +152,7 @@ export default function Navbar() {
 
           </div>
         </div>
+
       </div>
     </nav>
   );

@@ -53,7 +53,7 @@ export const apiService = {
     const body = {
       nombre: producto.nombre,
       descripcion: producto.descripcion || "",
-      precio: parseInt(producto.precio),
+      precio: parseInt(producto.precedio),
       stock: parseInt(producto.stock) || 0,
       activo: producto.activo,
       imagenUrl: producto.imagenUrl || null,
@@ -86,11 +86,10 @@ export const apiService = {
   },
 
   async eliminarProducto(id) {
-    const resp = await fetch(`${API_BASE_URL}/productos/${id}`, {
-      method: "DELETE"
-    });
+    const resp = await fetch(`${API_BASE_URL}/productos/${id}`, { method: "DELETE" });
     return handleResponse(resp);
   },
+
 
   // ---------------------------------------------------
   // 🟩 CATEGORÍAS
@@ -125,11 +124,10 @@ export const apiService = {
   },
 
   async eliminarCategoria(id) {
-    const resp = await fetch(`${API_BASE_URL}/categorias/${id}`, {
-      method: "DELETE"
-    });
+    const resp = await fetch(`${API_BASE_URL}/categorias/${id}`, { method: "DELETE" });
     return handleResponse(resp);
   },
+
 
   // ---------------------------------------------------
   // 🔐 AUTENTICACIÓN
@@ -153,119 +151,86 @@ export const apiService = {
     return handleResponse(resp);
   },
 
+
   // ---------------------------------------------------
-  // 🛒 CARRITO (COMPLETO Y CORREGIDO)
+  // 🛒 CARRITO COMPLETO
   // ---------------------------------------------------
 
   async obtenerCarrito(usuarioId) {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${API_BASE_URL}/carrito/${usuarioId}`, {
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-      return await handleResponse(response);
-    } catch (error) {
-      console.error("Error al obtener carrito:", error);
-      throw error;
-    }
+    const token = localStorage.getItem("token");
+    const resp = await fetch(`${API_BASE_URL}/carrito/${usuarioId}`, {
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+    return handleResponse(resp);
   },
 
   async agregarAlCarrito(usuarioId, productoId, cantidad) {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${API_BASE_URL}/carrito/${usuarioId}/agregar`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({ productoId, cantidad })
-      });
-      return await handleResponse(response);
-    } catch (error) {
-      console.error("Error al agregar al carrito:", error);
-      throw error;
-    }
+    const token = localStorage.getItem("token");
+    const resp = await fetch(`${API_BASE_URL}/carrito/${usuarioId}/agregar`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({ productoId, cantidad })
+    });
+    return handleResponse(resp);
   },
 
   async actualizarCantidadCarrito(usuarioId, itemId, cantidad) {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${API_BASE_URL}/carrito/${usuarioId}/item/${itemId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({ cantidad })
-      });
-      return await handleResponse(response);
-    } catch (error) {
-      console.error("Error al actualizar cantidad:", error);
-      throw error;
-    }
+    const token = localStorage.getItem("token");
+    const resp = await fetch(`${API_BASE_URL}/carrito/${usuarioId}/item/${itemId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({ cantidad })
+    });
+    return handleResponse(resp);
   },
 
   async eliminarItemCarrito(usuarioId, itemId) {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${API_BASE_URL}/carrito/${usuarioId}/item/${itemId}`, {
-        method: "DELETE",
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-      return await handleResponse(response);
-    } catch (error) {
-      console.error("Error al eliminar item:", error);
-      throw error;
-    }
+    const token = localStorage.getItem("token");
+    const resp = await fetch(`${API_BASE_URL}/carrito/${usuarioId}/item/${itemId}`, {
+      method: "DELETE",
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+    return handleResponse(resp);
   },
 
   async vaciarCarrito(usuarioId) {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await fetch(`${API_BASE_URL}/carrito/${usuarioId}/vaciar`, {
-        method: "DELETE",
-        headers: { "Authorization": `Bearer ${token}` }
-      });
+    const token = localStorage.getItem("token");
+    const resp = await fetch(`${API_BASE_URL}/carrito/${usuarioId}/vaciar`, {
+      method: "DELETE",
+      headers: { "Authorization": `Bearer ${token}` }
+    });
 
-      if (response.status === 204) return null;
-      return await handleResponse(response);
-    } catch (error) {
-      console.error("Error al vaciar carrito:", error);
-      throw error;
-    }
+    if (resp.status === 204) return null;
+    return handleResponse(resp);
   },
+
 
   // ---------------------------------------------------
   // 📦 ÓRDENES / HISTORIAL / BOLETA
   // ---------------------------------------------------
 
   async crearOrden(usuarioId) {
-  const token = localStorage.getItem("token");
+    const token = localStorage.getItem("token");
 
-  if (!token) {
-    throw new Error('No hay token de autenticación');
-  }
+    const resp = await fetch(`${API_BASE_URL}/ordenes/${usuarioId}/crear`, {
+      method: "POST",
+      headers: {
+        "Accept": "application/json",
+        "Authorization": `Bearer ${token}`
+      }
+    });
 
-  const resp = await fetch(`${API_BASE_URL}/ordenes/${usuarioId}/crear`, {
-    method: "POST",
-    headers: {
-      "Accept": "application/json",
-      "Authorization": `Bearer ${token}`
-    }
-  });
-
-  if (!resp.ok) {
-    const errorData = await resp.json().catch(() => ({ error: "Error desconocido" }));
-    throw new Error(errorData.error || errorData.message || "Error al crear la orden");
-  }
-
-  return resp.json();
-},
+    return handleResponse(resp);
+  },
 
   async obtenerHistorialUsuario(usuarioId) {
     const token = localStorage.getItem("token");
-
     const resp = await fetch(`${API_BASE_URL}/ordenes/usuario/${usuarioId}/historial`, {
       headers: { "Authorization": `Bearer ${token}` }
     });
@@ -274,7 +239,6 @@ export const apiService = {
 
   async obtenerTodasLasOrdenes() {
     const token = localStorage.getItem("token");
-
     const resp = await fetch(`${API_BASE_URL}/ordenes/admin/todas`, {
       headers: { "Authorization": `Bearer ${token}` }
     });
@@ -283,7 +247,6 @@ export const apiService = {
 
   async descargarBoleta(ordenId) {
     const token = localStorage.getItem("token");
-
     const resp = await fetch(`${API_BASE_URL}/ordenes/${ordenId}/boleta`, {
       headers: { "Authorization": `Bearer ${token}` }
     });
@@ -301,5 +264,40 @@ export const apiService = {
     a.remove();
 
     window.URL.revokeObjectURL(url);
+  },
+
+
+  // ---------------------------------------------------
+  // 👥 USUARIOS (ADMIN)
+  // ---------------------------------------------------
+
+  async getUsuarios() {
+    const token = localStorage.getItem("token");
+    const resp = await fetch(`${API_BASE_URL}/usuarios`, {
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+    return handleResponse(resp);
+  },
+
+  async actualizarUsuario(id, usuario) {
+    const token = localStorage.getItem("token");
+    const resp = await fetch(`${API_BASE_URL}/usuarios/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify(usuario)
+    });
+    return handleResponse(resp);
+  },
+
+  async eliminarUsuario(id) {
+    const token = localStorage.getItem("token");
+    const resp = await fetch(`${API_BASE_URL}/usuarios/${id}`, {
+      method: "DELETE",
+      headers: { "Authorization": `Bearer ${token}` }
+    });
+    return handleResponse(resp);
   }
 };
