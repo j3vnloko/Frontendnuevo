@@ -1,4 +1,3 @@
-// src/pages/AdminDashboard.jsx
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { apiService } from '../api/apiService';
@@ -8,8 +7,22 @@ export default function AdminDashboard() {
   const [ordenes, setOrdenes] = useState([]);
   const [usuarios, setUsuarios] = useState([]);
   const [productos, setProductos] = useState([]);
+  const [categorias, setCategorias] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingUser, setEditingUser] = useState(null);
+  
+  // Estados para gestión de productos
+  const [mostrarFormProducto, setMostrarFormProducto] = useState(false);
+  const [productoEditar, setProductoEditar] = useState(null);
+  const [formDataProducto, setFormDataProducto] = useState({
+    nombre: '',
+    descripcion: '',
+    precio: '',
+    stock: '',
+    categoriaId: '',
+    activo: true,
+    imagenUrl: ''
+  });
 
   useEffect(() => {
     cargarDatos();
@@ -25,8 +38,12 @@ export default function AdminDashboard() {
         const data = await apiService.getUsuarios();
         setUsuarios(data);
       } else if (activeTab === 'productos') {
-        const data = await apiService.getProductos();
-        setProductos(data);
+        const [prods, cats] = await Promise.all([
+          apiService.getProductos(),
+          apiService.getCategorias()
+        ]);
+        setProductos(prods);
+        setCategorias(cats);
       }
     } catch (error) {
       console.error('Error al cargar datos:', error);
@@ -36,6 +53,99 @@ export default function AdminDashboard() {
     }
   };
 
+  // ==================== GESTIÓN DE PRODUCTOS ====================
+  
+  const resetFormProducto = () => {
+    setFormDataProducto({
+      nombre: '',
+      descripcion: '',
+      precio: '',
+      stock: '',
+      categoriaId: '',
+      activo: true,
+      imagenUrl: ''
+    });
+    setProductoEditar(null);
+    setMostrarFormProducto(false);
+  };
+
+  const handleSubmitProducto = async (e) => {
+    e.preventDefault();
+    try {
+      const productoData = {
+        ...formDataProducto,
+        precio: parseInt(formDataProducto.precio),
+        stock: parseInt(formDataProducto.stock),
+        categoriaId: parseInt(formDataProducto.categoriaId)
+      };
+
+      if (productoEditar) {
+        await apiService.actualizarProducto(productoEditar.id, productoData);
+        alert('Producto actualizado correctamente');
+      } else {
+        await apiService.crearProducto(productoData);
+        alert('Producto creado correctamente');
+      }
+
+      resetFormProducto();
+      cargarDatos();
+    } catch (error) {
+      alert('Error al guardar producto: ' + error.message);
+    }
+  };
+
+  const handleEditarProducto = (producto) => {
+    setProductoEditar(producto);
+    setFormDataProducto({
+      nombre: producto.nombre,
+      descripcion: producto.descripcion || '',
+      precio: producto.precio?.toString() || '',
+      stock: producto.stock?.toString() || '0',
+      categoriaId: producto.categoria?.id?.toString() || '',
+      activo: producto.activo,
+      imagenUrl: producto.imagenUrl || ''
+    });
+    setMostrarFormProducto(true);
+  };
+
+  const handleActivarProducto = async (id) => {
+    if (window.confirm('¿Está seguro de activar este producto?')) {
+      try {
+        await apiService.activarProducto(id);
+        alert('Producto activado');
+        cargarDatos();
+      } catch (error) {
+        alert('Error al activar producto');
+      }
+    }
+  };
+
+  const handleDesactivarProducto = async (id) => {
+    if (window.confirm('¿Está seguro de desactivar este producto?')) {
+      try {
+        await apiService.desactivarProducto(id);
+        alert('Producto desactivado');
+        cargarDatos();
+      } catch (error) {
+        alert('Error al desactivar producto');
+      }
+    }
+  };
+
+  const handleEliminarProducto = async (id) => {
+    if (window.confirm('¿Está seguro de eliminar este producto? Esta acción no se puede deshacer.')) {
+      try {
+        await apiService.eliminarProducto(id);
+        alert('Producto eliminado');
+        cargarDatos();
+      } catch (error) {
+        alert('Error al eliminar producto');
+      }
+    }
+  };
+
+  // ==================== GESTIÓN DE USUARIOS ====================
+  
   const handleEliminarUsuario = async (id) => {
     if (window.confirm('¿Está seguro de eliminar este usuario?')) {
       try {
@@ -115,7 +225,7 @@ export default function AdminDashboard() {
         </div>
       ) : (
         <>
-          {/* TAB: ÓRDENES */}
+          {/* ==================== TAB: ÓRDENES ==================== */}
           {activeTab === 'ordenes' && (
             <div className="card shadow-sm">
               <div className="card-body">
@@ -166,7 +276,7 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {/* TAB: USUARIOS */}
+          {/* ==================== TAB: USUARIOS ==================== */}
           {activeTab === 'usuarios' && (
             <div className="card shadow-sm">
               <div className="card-body">
@@ -176,7 +286,7 @@ export default function AdminDashboard() {
                   <div className="card mb-4 bg-light">
                     <div className="card-body">
                       <h6>Editar Usuario</h6>
-                      <form onSubmit={handleGuardarUsuario}>
+                      <div onSubmit={(e) => { e.preventDefault(); handleGuardarUsuario(e); }}>
                         <div className="row">
                           <div className="col-md-4 mb-2">
                             <input
@@ -209,7 +319,7 @@ export default function AdminDashboard() {
                             </select>
                           </div>
                           <div className="col-md-2 mb-2">
-                            <button type="submit" className="btn btn-success w-100">Guardar</button>
+                            <button onClick={(e) => handleGuardarUsuario(e)} className="btn btn-success w-100">Guardar</button>
                           </div>
                         </div>
                         <button
@@ -219,7 +329,7 @@ export default function AdminDashboard() {
                         >
                           Cancelar
                         </button>
-                      </form>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -275,46 +385,187 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {/* TAB: PRODUCTOS */}
+          {/* ==================== TAB: PRODUCTOS ==================== */}
           {activeTab === 'productos' && (
-            <div className="card shadow-sm">
-              <div className="card-body">
-                <div className="d-flex justify-content-between align-items-center mb-4">
-                  <h5 className="mb-0">Gestión de Productos ({productos.length})</h5>
-                  <Link to="/admin" className="btn btn-success">
-                    ➕ Ir a Panel de Productos
-                  </Link>
+            <div>
+              {/* Botón para mostrar/ocultar formulario */}
+              <div className="d-flex justify-content-between align-items-center mb-4">
+                <h5 className="mb-0">Productos ({productos.length})</h5>
+                <button 
+                  className="btn btn-success"
+                  onClick={() => setMostrarFormProducto(!mostrarFormProducto)}
+                >
+                  {mostrarFormProducto ? '❌ Cancelar' : '➕ Nuevo Producto'}
+                </button>
+              </div>
+
+              {/* Formulario de Producto */}
+              {mostrarFormProducto && (
+                <div className="card mb-4 shadow">
+                  <div className="card-body">
+                    <h5>{productoEditar ? 'Editar Producto' : 'Crear Producto'}</h5>
+                    <div onSubmit={(e) => { e.preventDefault(); handleSubmitProducto(e); }}>
+                      <div className="row">
+                        <div className="col-md-6 mb-3">
+                          <label className="form-label">Nombre *</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            value={formDataProducto.nombre}
+                            onChange={(e) => setFormDataProducto({ ...formDataProducto, nombre: e.target.value })}
+                            required
+                          />
+                        </div>
+
+                        <div className="col-md-6 mb-3">
+                          <label className="form-label">Precio *</label>
+                          <input
+                            type="number"
+                            className="form-control"
+                            value={formDataProducto.precio}
+                            onChange={(e) => setFormDataProducto({ ...formDataProducto, precio: e.target.value })}
+                            required
+                          />
+                        </div>
+
+                        <div className="col-md-6 mb-3">
+                          <label className="form-label">Stock</label>
+                          <input
+                            type="number"
+                            className="form-control"
+                            value={formDataProducto.stock}
+                            onChange={(e) => setFormDataProducto({ ...formDataProducto, stock: e.target.value })}
+                          />
+                        </div>
+
+                        <div className="col-md-6 mb-3">
+                          <label className="form-label">Categoría</label>
+                          <select
+                            className="form-select"
+                            value={formDataProducto.categoriaId}
+                            onChange={(e) => setFormDataProducto({ ...formDataProducto, categoriaId: e.target.value })}
+                          >
+                            <option value="">Seleccione...</option>
+                            {categorias.map((cat) => (
+                              <option key={cat.id} value={cat.id}>
+                                {cat.nombre}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="col-md-6 mb-3">
+                          <label className="form-label">Imagen (URL)</label>
+                          <input
+                            type="text"
+                            className="form-control"
+                            placeholder="https://miimagen.com/foto.jpg"
+                            value={formDataProducto.imagenUrl || ''}
+                            onChange={(e) => setFormDataProducto({ ...formDataProducto, imagenUrl: e.target.value })}
+                          />
+                        </div>
+
+                        <div className="col-12 mb-3">
+                          <label className="form-label">Descripción</label>
+                          <textarea
+                            className="form-control"
+                            rows="3"
+                            value={formDataProducto.descripcion}
+                            onChange={(e) => setFormDataProducto({ ...formDataProducto, descripcion: e.target.value })}
+                          />
+                        </div>
+
+                        <div className="col-12 mb-3">
+                          <div className="form-check">
+                            <input
+                              type="checkbox"
+                              className="form-check-input"
+                              checked={formDataProducto.activo}
+                              onChange={(e) => setFormDataProducto({...formDataProducto, activo: e.target.checked})}
+                            />
+                            <label className="form-check-label">Activo</label>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="d-flex gap-2">
+                        <button onClick={(e) => handleSubmitProducto(e)} className="btn btn-primary">
+                          {productoEditar ? 'Actualizar' : 'Crear'}
+                        </button>
+                        <button type="button" className="btn btn-secondary" onClick={resetFormProducto}>
+                          Cancelar
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                
-                <div className="table-responsive">
-                  <table className="table table-hover">
-                    <thead className="table-light">
-                      <tr>
-                        <th>ID</th>
-                        <th>Nombre</th>
-                        <th>Precio</th>
-                        <th>Stock</th>
-                        <th>Categoría</th>
-                        <th>Estado</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {productos.map(producto => (
-                        <tr key={producto.id}>
-                          <td>{producto.id}</td>
-                          <td>{producto.nombre}</td>
-                          <td>${producto.precio?.toLocaleString()}</td>
-                          <td>{producto.stock || 'N/A'}</td>
-                          <td>{producto.categoria?.nombre || 'Sin categoría'}</td>
-                          <td>
-                            <span className={`badge ${producto.activo ? 'bg-success' : 'bg-secondary'}`}>
-                              {producto.activo ? 'Activo' : 'Inactivo'}
-                            </span>
-                          </td>
+              )}
+
+              {/* Tabla de Productos */}
+              <div className="card shadow">
+                <div className="card-body">
+                  <div className="table-responsive">
+                    <table className="table table-hover">
+                      <thead className="table-light">
+                        <tr>
+                          <th>ID</th>
+                          <th>Nombre</th>
+                          <th>Precio</th>
+                          <th>Stock</th>
+                          <th>Categoría</th>
+                          <th>Estado</th>
+                          <th>Acciones</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {productos.map(producto => (
+                          <tr key={producto.id}>
+                            <td>{producto.id}</td>
+                            <td>{producto.nombre}</td>
+                            <td>${producto.precio?.toLocaleString()}</td>
+                            <td>{producto.stock || 'N/A'}</td>
+                            <td>{producto.categoria?.nombre || 'Sin categoría'}</td>
+                            <td>
+                              <span className={`badge ${producto.activo ? 'bg-success' : 'bg-secondary'}`}>
+                                {producto.activo ? 'Activo' : 'Inactivo'}
+                              </span>
+                            </td>
+                            <td>
+                              <button
+                                className="btn btn-sm btn-warning me-2"
+                                onClick={() => handleEditarProducto(producto)}
+                              >
+                                ✏️
+                              </button>
+
+                              {producto.activo ? (
+                                <button
+                                  className="btn btn-sm btn-secondary me-2"
+                                  onClick={() => handleDesactivarProducto(producto.id)}
+                                >
+                                  🚫
+                                </button>
+                              ) : (
+                                <button
+                                  className="btn btn-sm btn-success me-2"
+                                  onClick={() => handleActivarProducto(producto.id)}
+                                >
+                                  ✅
+                                </button>
+                              )}
+
+                              <button
+                                className="btn btn-sm btn-danger"
+                                onClick={() => handleEliminarProducto(producto.id)}
+                              >
+                                🗑️
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             </div>
